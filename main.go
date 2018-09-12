@@ -11,6 +11,7 @@
 package main
 
 import "fmt"
+import "os"
 import "github.com/fogleman/gg"
 import "github.com/BurntSushi/toml"
 import "github.com/docopt/docopt-go"
@@ -25,7 +26,7 @@ type speaker struct {
 type setup struct {
 	Width, Height int    // dimentions of final image
 	Size          int    // height of lower third box
-	icon          string // path to logo image
+	Icon          string // path to logo image
 	Background    string // image to tile for background
 	Font          string // path to TrueType font file
 	VerseSize     int    `toml:"verse_size"` // font size of verse
@@ -175,6 +176,7 @@ Options
 		fmt.Println(err)
 		return
 	}
+	os.Mkdir("output", 0777)
 	for cnt, s := range fdata.Slide {
 		doSlide(fdata, s,
 			fmt.Sprintf("output/slide%02d.png", cnt+1))

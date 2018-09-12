@@ -1,0 +1,38 @@
+[speaker]
+name = "Kyle B"
+role = "music director"
+
+[setup]
+width = 1920
+height = 1080
+size = 270		# size of band at bottom of screen
+icon = 'mp.png'		# icon on each slide
+background = 'fill.png'	# background pattern (will repeat)
+font = 'Sawasdee.ttf'
+verse_size = 36
+title_size = 70
+border = 40		# distance from writing to edges
+
+[[slide]]
+text = 'For all who are led by the Spirit of God are sons of God. For you did not receive the spirit of slavery to fall back into fear, but you have received the Spirit of adoption as sons, by whom we cry, “Abba! Father!” The Spirit himself bears witness with our spirit that we are children of God'
+ref = "Romans 8:14-16 (ESV)"
+
+[[slide]]
+text = 'Who shall separate us from the love of Christ? Shall tribulation, or distress, or persecution, or famine, or nakedness, or danger, or sword? As it is written, “For your sake we are being killed all the day long; we are regarded as sheep to be slaughtered."'
+ref = "Romans 8:35-36 (ESV)"
+
+[[slide]]
+text = 'No, in all these things we are more than conquerors through him who loved us. For I am sure that neither death nor life, nor angels nor rulers, nor things present nor things to come, nor powers, nor height nor depth, nor anything else in all creation, will be able to separate us from the love of God in Christ Jesus our Lord.'
+ref = "Romans 8:37-39 (ESV)"
+
+[[slide]]
+title = "Love God"
+
+[[slide]]
+title = "Love Others"
+
+[[slide]]
+image = "kyle fam.JPG"
+
+[[slide]]
+image = "Owen Infant.jpg"
