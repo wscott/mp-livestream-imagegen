@@ -26,6 +26,7 @@ type speaker struct {
 type setup struct {
 	Width, Height int    // dimentions of final image
 	Size          int    // height of lower third box
+	LogoWidth     int    `toml:"logo_width"`
 	Icon          string // path to logo image
 	Background    string // image to tile for background
 	Font          string // path to TrueType font file
@@ -65,12 +66,11 @@ func defaultSlide(fdata fData, dc *gg.Context) {
 	}
 	dc.SetFillStyle(gg.NewSurfacePattern(img, gg.RepeatBoth))
 	dc.Fill()
-	img, err = gg.LoadImage(fdata.Setup.Icon)
-	if err != nil {
-		panic(err)
-	}
-	dc.DrawImageAnchored(img, fdata.Setup.Size/2,
-		fdata.Setup.Height-fdata.Setup.Size/2,
+	scaleImageToBox(dc, fdata.Setup.Icon,
+		fdata.Setup.Border,
+		fdata.Setup.Height-fdata.Setup.Size+fdata.Setup.Border,
+		fdata.Setup.LogoWidth-fdata.Setup.Border,
+		fdata.Setup.Size-2*fdata.Setup.Border,
 		0.5, 0.5)
 }
 
@@ -85,11 +85,11 @@ func doVerse(fdata fData, s slide, dc *gg.Context) {
 	}
 	dc.SetRGB(0, 0, 0)
 	dc.DrawStringWrapped(s.Text,
-		float64(fdata.Setup.Size+fdata.Setup.Border),
+		float64(fdata.Setup.LogoWidth+fdata.Setup.Border),
 		float64(fdata.Setup.Height-fdata.Setup.Size+
 			fdata.Setup.Border),
 		0, 0,
-		float64(fdata.Setup.Width-fdata.Setup.Size-
+		float64(fdata.Setup.Width-fdata.Setup.LogoWidth-
 			2*fdata.Setup.Border),
 		1.5, gg.AlignLeft)
 	if len(s.Ref) > 0 {
@@ -109,17 +109,15 @@ func doMainPoint(fdata fData, s slide, dc *gg.Context) {
 	dc.SetRGB(0, 0, 0)
 	dc.DrawStringAnchored(s.Title,
 		float64(fdata.Setup.Size+
-			(fdata.Setup.Width-fdata.Setup.Size)/2),
+			(fdata.Setup.Width-fdata.Setup.LogoWidth)/2),
 		float64(fdata.Setup.Height-fdata.Setup.Size/2),
 		.5, .5)
 }
 
-// Generate image slide.  The image is scaled to fit on the left side
-// of the screen. It is also moved up so a lower third image can be
-// added without overlap.
-func doImage(fdata fData, s slide, dc *gg.Context) {
+func scaleImageToBox(dc *gg.Context, file string,
+	x, y, w, h int, ax, ay float64) {
 
-	img, err := gg.LoadImage(s.Image)
+	img, err := gg.LoadImage(file)
 	if err != nil {
 		panic(err)
 	}
@@ -127,8 +125,8 @@ func doImage(fdata fData, s slide, dc *gg.Context) {
 
 	// How much do I need to scale the image to fit vertically and
 	// horizontally.
-	scalex := float64(fdata.Setup.Width) / 2 / float64(iw)
-	scaley := float64((fdata.Setup.Height - fdata.Setup.Size)) / float64(ih)
+	scalex := float64(w) / float64(iw)
+	scaley := float64(h) / float64(ih)
 	scale := scalex
 	if scale > scaley {
 		scale = scaley
@@ -137,10 +135,20 @@ func doImage(fdata fData, s slide, dc *gg.Context) {
 	// Draw scaled image. The position is also scaled so I needed
 	// to reverse scale the y position.
 	dc.Scale(scale, scale)
-	dc.DrawImage(img, 0,
-		(int(float64(fdata.Setup.Height-fdata.Setup.Size)/
-			scale)-ih)/2)
+	dc.DrawImage(img,
+		int(float64(x)/scale+(float64(w)/scale-float64(iw))*ax),
+		int(float64(y)/scale+(float64(h)/scale-float64(ih))*ay))
 	dc.Identity()
+}
+
+// Generate image slide.  The image is scaled to fit on the left side
+// of the screen. It is also moved up so a lower third image can be
+// added without overlap.
+func doImage(fdata fData, s slide, dc *gg.Context) {
+
+	scaleImageToBox(dc, s.Image, 0, 0,
+		fdata.Setup.Width/2, fdata.Setup.Height-fdata.Setup.Size,
+		0, 0.5)
 }
 
 func doSlide(fdata fData, s slide, name string) {
@@ -175,6 +183,9 @@ Options
 	if err != nil {
 		fmt.Println(err)
 		return
+	}
+	if fdata.Setup.LogoWidth == 0 {
+		fdata.Setup.LogoWidth = fdata.Setup.Size
 	}
 	os.Mkdir("output", 0777)
 	for cnt, s := range fdata.Slide {
