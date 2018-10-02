@@ -8,6 +8,11 @@
 // and then processes them.  The fields in the file match the
 // structure names.
 
+// TODO:
+//    * allow bold sections of verses
+//    * allow verse sizes to be overridden per-slide
+//    * support smaller sub-title on title slides
+
 package main
 
 import "fmt"
@@ -39,7 +44,7 @@ type setup struct {
 type slide struct {
 	// for sermon points
 	Title    string // main point
-	Subtitle string // subpoint
+//	Subtitle string // subpoint
 
 	// for verses or larger text blocks
 	Text string // block of text
@@ -153,14 +158,17 @@ func doImage(fdata fData, s slide, dc *gg.Context) {
 
 func doSlide(fdata fData, s slide, name string) {
 	dc := gg.NewContext(fdata.Setup.Width, fdata.Setup.Height)
-	if len(s.Image) == 0 {
+	if len(s.Text) > 0 || len(s.Ref) > 0 {
+		if len(s.Title) > 0 {
+			panic("can't use 'title' with 'text' or 'ref'")
+		}
 		defaultSlide(fdata, dc)
-	}
-	if len(s.Ref) > 0 {
 		doVerse(fdata, s, dc)
 	} else if len(s.Title) > 0 {
+		defaultSlide(fdata, dc)
 		doMainPoint(fdata, s, dc)
-	} else if len(s.Image) > 0 {
+	}
+	if len(s.Image) > 0 {
 		doImage(fdata, s, dc)
 	}
 	dc.SavePNG(name)
@@ -188,8 +196,18 @@ Options
 		fdata.Setup.LogoWidth = fdata.Setup.Size
 	}
 	os.Mkdir("output", 0777)
+	last := 0
 	for cnt, s := range fdata.Slide {
 		doSlide(fdata, s,
 			fmt.Sprintf("output/slide%02d.png", cnt+1))
+		last = cnt+1
+	}
+	// remove any extra slides leftover from a previous run
+	for {
+		last = last + 1
+		file := fmt.Sprintf("output/slide%02d.png", last)
+		if os.Remove(file) != nil {
+			break;
+		}
 	}
 }
