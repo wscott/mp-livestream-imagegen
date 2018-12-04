@@ -6,6 +6,7 @@ role = "music director"
 width = 1920
 height = 1080
 size = 270		# size of band at bottom of screen
+left_border = 270
 icon = 'mp.png'		# icon on each slide
 background = 'fill.png'	# background pattern (will repeat)
 font = 'Sawasdee.ttf'
