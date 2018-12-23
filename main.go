@@ -17,6 +17,8 @@ package main
 
 import "fmt"
 import "os"
+import "golang.org/x/image/colornames"
+
 import "github.com/fogleman/gg"
 import "github.com/BurntSushi/toml"
 import "github.com/docopt/docopt-go"
@@ -31,13 +33,15 @@ type speaker struct {
 type setup struct {
 	Width, Height int    // dimentions of final image
 	Size          int    // height of lower third box
-	LogoWidth     int    `toml:"logo_width"`
-	Icon          string // path to logo image
 	Background    string // image to tile for background
+	Border        int    // space to edge of image
+	LeftBorder    int    `toml:"left_border"`
+	RightBorder   int    `toml:"right_border"`
+	Icon          string // path to logo image
 	Font          string // path to TrueType font file
+	FontColor     string `toml:"font_color"`
 	VerseSize     int    `toml:"verse_size"` // font size of verse
 	TitleSize     int    `toml:"title_size"` // font size of titles
-	Border        int    // space to edge of image
 }
 
 // information about an individual slide
@@ -71,12 +75,17 @@ func defaultSlide(fdata fData, dc *gg.Context) {
 	}
 	dc.SetFillStyle(gg.NewSurfacePattern(img, gg.RepeatBoth))
 	dc.Fill()
-	scaleImageToBox(dc, fdata.Setup.Icon,
-		fdata.Setup.Border,
-		fdata.Setup.Height-fdata.Setup.Size+fdata.Setup.Border,
-		fdata.Setup.LogoWidth-fdata.Setup.Border,
-		fdata.Setup.Size-2*fdata.Setup.Border,
-		0.5, 0.5)
+	if len(fdata.Setup.Icon) > 0 {
+		if fdata.Setup.LeftBorder == 0 {
+			panic("Must set 'left_border' to use 'icon'")
+		}
+		scaleImageToBox(dc, fdata.Setup.Icon,
+			fdata.Setup.Border,
+			fdata.Setup.Height-fdata.Setup.Size+fdata.Setup.Border,
+			fdata.Setup.LeftBorder-2*fdata.Setup.Border,
+			fdata.Setup.Size-2*fdata.Setup.Border,
+			0.5, 0.5)
+	}
 }
 
 // Generate a verse slide. Just a wrapped block of text with a
@@ -88,18 +97,20 @@ func doVerse(fdata fData, s slide, dc *gg.Context) {
 	if err != nil {
 		panic(err)
 	}
-	dc.SetRGB(0, 0, 0)
+	dc.SetColor(colornames.Map[fdata.Setup.FontColor])
 	dc.DrawStringWrapped(s.Text,
-		float64(fdata.Setup.LogoWidth+fdata.Setup.Border),
+		float64(fdata.Setup.LeftBorder+fdata.Setup.Border),
 		float64(fdata.Setup.Height-fdata.Setup.Size+
 			fdata.Setup.Border),
 		0, 0,
-		float64(fdata.Setup.Width-fdata.Setup.LogoWidth-
+		float64(fdata.Setup.Width-
+			fdata.Setup.LeftBorder-fdata.Setup.RightBorder-
 			2*fdata.Setup.Border),
 		1.5, gg.AlignLeft)
 	if len(s.Ref) > 0 {
 		dc.DrawStringAnchored(s.Ref,
-			float64(fdata.Setup.Width-fdata.Setup.Border),
+			float64(fdata.Setup.Width-
+				fdata.Setup.RightBorder-fdata.Setup.Border),
 			float64(fdata.Setup.Height-fdata.Setup.Border),
 			1, 0)
 	}
@@ -111,12 +122,18 @@ func doMainPoint(fdata fData, s slide, dc *gg.Context) {
 	if err != nil {
 		panic(err)
 	}
-	dc.SetRGB(0, 0, 0)
-	dc.DrawStringAnchored(s.Title,
-		float64(fdata.Setup.Size+
-			(fdata.Setup.Width-fdata.Setup.LogoWidth)/2),
+	dc.SetColor(colornames.Map[fdata.Setup.FontColor])
+	// centered wrapped text
+	dc.DrawStringWrapped(s.Title,
+		float64(fdata.Setup.LeftBorder +
+			(fdata.Setup.Width  -
+			fdata.Setup.LeftBorder - fdata.Setup.RightBorder)/2),
 		float64(fdata.Setup.Height-fdata.Setup.Size/2),
-		.5, .5)
+		.5, .5,
+		float64(fdata.Setup.Width-
+			fdata.Setup.LeftBorder-fdata.Setup.RightBorder-
+			2*fdata.Setup.Border),
+		1.5, gg.AlignCenter)
 }
 
 func scaleImageToBox(dc *gg.Context, file string,
@@ -191,9 +208,6 @@ Options
 	if err != nil {
 		fmt.Println(err)
 		return
-	}
-	if fdata.Setup.LogoWidth == 0 {
-		fdata.Setup.LogoWidth = fdata.Setup.Size
 	}
 	os.Mkdir("output", 0777)
 	last := 0
