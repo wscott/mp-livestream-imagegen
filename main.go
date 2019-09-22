@@ -37,6 +37,7 @@ type setup struct {
 	Border        int    // space to edge of image
 	LeftBorder    int    `toml:"left_border"`
 	RightBorder   int    `toml:"right_border"`
+	TopBorder     int    `toml:"top_border"`
 	Icon          string // path to logo image
 	Font          string // path to TrueType font file
 	FontColor     string `toml:"font_color"`
@@ -101,7 +102,7 @@ func doVerse(fdata fData, s slide, dc *gg.Context) {
 	dc.DrawStringWrapped(s.Text,
 		float64(fdata.Setup.LeftBorder+fdata.Setup.Border),
 		float64(fdata.Setup.Height-fdata.Setup.Size+
-			fdata.Setup.Border),
+			fdata.Setup.TopBorder+fdata.Setup.Border),
 		0, 0,
 		float64(fdata.Setup.Width-
 			fdata.Setup.LeftBorder-fdata.Setup.RightBorder-
@@ -125,10 +126,10 @@ func doMainPoint(fdata fData, s slide, dc *gg.Context) {
 	dc.SetColor(colornames.Map[fdata.Setup.FontColor])
 	// centered wrapped text
 	dc.DrawStringWrapped(s.Title,
-		float64(fdata.Setup.LeftBorder +
-			(fdata.Setup.Width  -
-			fdata.Setup.LeftBorder - fdata.Setup.RightBorder)/2),
-		float64(fdata.Setup.Height-fdata.Setup.Size/2),
+		float64(fdata.Setup.LeftBorder+
+			(fdata.Setup.Width-
+				fdata.Setup.LeftBorder-fdata.Setup.RightBorder)/2),
+		float64(fdata.Setup.Height-(fdata.Setup.Size-fdata.Setup.TopBorder)/2),
 		.5, .5,
 		float64(fdata.Setup.Width-
 			fdata.Setup.LeftBorder-fdata.Setup.RightBorder-
