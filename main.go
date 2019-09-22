@@ -49,8 +49,8 @@ type setup struct {
 // information about an individual slide
 type slide struct {
 	// for sermon points
-	Title    string // main point
-//	Subtitle string // subpoint
+	Title string // main point
+	//	Subtitle string // subpoint
 
 	// for verses or larger text blocks
 	Text string // block of text
@@ -220,14 +220,14 @@ Options
 	for cnt, s := range fdata.Slide {
 		doSlide(fdata, s,
 			fmt.Sprintf("output/slide%02d.png", cnt+1))
-		last = cnt+1
+		last = cnt + 1
 	}
 	// remove any extra slides leftover from a previous run
 	for {
 		last = last + 1
 		file := fmt.Sprintf("output/slide%02d.png", last)
 		if os.Remove(file) != nil {
-			break;
+			break
 		}
 	}
 }
