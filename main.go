@@ -43,6 +43,7 @@ type setup struct {
 	FontColor     string `toml:"font_color"`
 	VerseSize     int    `toml:"verse_size"` // font size of verse
 	TitleSize     int    `toml:"title_size"` // font size of titles
+	CenterVerse   bool   `toml:"center_verse"`
 }
 
 // information about an individual slide
@@ -99,6 +100,10 @@ func doVerse(fdata fData, s slide, dc *gg.Context) {
 		panic(err)
 	}
 	dc.SetColor(colornames.Map[fdata.Setup.FontColor])
+	align := gg.AlignLeft
+	if fdata.Setup.CenterVerse {
+		align = gg.AlignCenter
+	}
 	dc.DrawStringWrapped(s.Text,
 		float64(fdata.Setup.LeftBorder+fdata.Setup.Border),
 		float64(fdata.Setup.Height-fdata.Setup.Size+
@@ -107,7 +112,7 @@ func doVerse(fdata fData, s slide, dc *gg.Context) {
 		float64(fdata.Setup.Width-
 			fdata.Setup.LeftBorder-fdata.Setup.RightBorder-
 			2*fdata.Setup.Border),
-		1.5, gg.AlignLeft)
+		1.5, align)
 	if len(s.Ref) > 0 {
 		dc.DrawStringAnchored(s.Ref,
 			float64(fdata.Setup.Width-
